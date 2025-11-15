@@ -128,49 +128,7 @@ En cas d’erreur métier (ex : données invalides), on pourrait utiliser `respo
 
 ---
 
-## 6. Détails gRPC côté serveur
-
-Dans les méthodes gRPC serveur, on utilise un `StreamObserver<...>` pour gérer les réponses vers le client.
-
-### 6.1. `responseObserver.onNext(...)`
-
-- Permet d’envoyer un **message de réponse** au client.
-- Dans un appel **unary** (une requête / une réponse), on l’appelle généralement **une seule fois** avant `onCompleted()`.
-- Dans un appel **server streaming**, on peut appeler `onNext(...)` plusieurs fois pour envoyer plusieurs messages successifs au client.
-
-Dans ce TP, par exemple :
-
-```java
-responseObserver.onNext(GetAllComptesResponse.newBuilder()
-        .addAllComptes(comptes)
-        .build());
-responseObserver.onCompleted();
-```
-
-### 6.2. `responseObserver.onError(...)`
-
-- Sert à signaler une **erreur** au client (par exemple : compte non trouvé, argument invalide, erreur serveur…).
-- On lui passe un `Throwable` (souvent construit avec les utilitaires de statut gRPC, par ex. `Status.NOT_FOUND.asRuntimeException()`).
-- Après `onError(...)`, le flux est clôturé côté serveur et côté client, et `onCompleted()` n’est **pas** appelé.
-
-Exemple générique :
-
-```java
-responseObserver.onError(
-    io.grpc.Status.NOT_FOUND
-        .withDescription("Compte introuvable")
-        .asRuntimeException()
-);
-```
-
-### 6.3. `responseObserver.onCompleted()`
-
-- Indique que le serveur a fini d’envoyer des messages.
-- Doit être appelé après le dernier `onNext(...)` dans un scénario normal (sans erreur).
-
----
-
-## 7. Structure du projet
+## 6. Structure du projet
 
 Structure simplifiée du projet :
 
@@ -186,12 +144,6 @@ Structure simplifiée du projet :
 - `src/main/resources/`
   - `application.properties` : configuration Spring Boot (ports, H2, etc.).
   - `templates/`, `static/` : éventuels fichiers web.
-- `images/`
-  - `add-compte.png`
-  - `all-comptes.png`
-  - `compte-by-id.png`
-  - `h2-db.png`
-  - `total-compte.png`
 
 Les classes générées à partir des fichiers `.proto` se trouvent dans :
 
@@ -199,41 +151,29 @@ Les classes générées à partir des fichiers `.proto` se trouvent dans :
 
 ---
 
-## 8. Captures d’écran
+## 7. Captures d’écran
 
-Les captures d’écran sont situées dans le dossier `images` à la racine du projet. Elles illustrent le fonctionnement du TP.
-
-### 8.1. Tests gRPC avec BloomRPC
+### 7.1. Tests gRPC avec BloomRPC
 
 Les appels gRPC ont été testés avec **BloomRPC**, en utilisant le fichier `CompteService.proto`.
 
-- `images/add-compte.png`  
+- <img width="1907" height="730" alt="add-compte" src="https://github.com/user-attachments/assets/701be43b-ec6b-4865-b338-fd6a99c6b1e6" />
   Test de la méthode `saveCompte` dans BloomRPC : envoi d’un nouveau compte et visualisation de la réponse (compte créé avec un `id` généré).
 
-- `images/all-comptes.png`  
+- <img width="1906" height="669" alt="all-comptes" src="https://github.com/user-attachments/assets/30ed3ed2-1894-471a-bea0-5b1b26af5870" />
   Test de la méthode `allComptes` dans BloomRPC : récupération et affichage de la liste de tous les comptes enregistrés.
 
-- `images/compte-by-id.png`  
+- <img width="1907" height="642" alt="compte-by-id" src="https://github.com/user-attachments/assets/fc5dbf79-3819-4ec2-b2b7-4b1b21f782af" />
   Test d’un appel gRPC qui récupère un compte par son identifiant (si le RPC `getCompteById` est implémenté).
 
-### 8.2. Base de données H2
+### 7.2. Base de données H2
 
-- `images/h2-db.png`  
+- <img width="1004" height="506" alt="h2-db" src="https://github.com/user-attachments/assets/e4dd3283-f6af-419a-bad7-2525f91f5f6d" />
   Visualisation des comptes dans la console H2 après les appels gRPC (vérification que les données ont bien été persistées).
 
-### 8.3. Total des comptes
+### 7.3. Total des comptes
 
-- `images/total-compte.png`  
+-  <img width="1914" height="656" alt="total-compte" src="https://github.com/user-attachments/assets/cb61a979-1f7f-44c4-934a-8c496cd78668" />
   Exemple d’affichage d’un calcul ou d’une agrégation (par exemple le nombre total de comptes) si une méthode gRPC dédiée existe.
 
 ---
-
-## 9. Pistes d’extension du TP
-
-Pour aller plus loin, quelques idées d’exercices :
-
-- Ajouter des RPC supplémentaires : `getCompteById`, `deleteCompte`, `updateCompte`, `getTotalComptes`, etc.
-- Gérer des erreurs gRPC plus fines avec différents statuts (`NOT_FOUND`, `INVALID_ARGUMENT`, `INTERNAL`, …).
-- Ajouter des tests unitaires et/ou d’intégration pour les services gRPC.
-- Mettre en place un client Web ou une API REST qui consomme le service gRPC.
-- Sécuriser les appels gRPC (TLS, authentification, etc.).
